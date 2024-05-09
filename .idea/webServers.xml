@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="37c2d85c-a0dd-4654-aba2-4610297bfd79" name="ACT1">
+        <fileTransfer rootFolder="/home/ubuntu/act" accessType="SFTP" host="13.126.234.91" port="22" sshConfigId="fa465516-0e6d-4629-904c-8fedc89f5a4a" sshConfig="ubuntu@13.126.234.91:22 key" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
