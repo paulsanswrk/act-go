@@ -20,14 +20,16 @@ var (
 func Listen_Binance_Klines() {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Println("Recovered in Listen_Binance_Klines:", r)
+			//log.Println("Recovered in Listen_Binance_Klines:", r)
+			db.AddMessage("Recovered in Listen_Binance_Klines", r)
 		}
 	}()
 
 	wsKlineHandler := func(event *binance.WsKlineEvent) {
 		defer func() {
 			if r := recover(); r != nil {
-				log.Println("Recovered in wsKlineHandler:", r)
+				//log.Println("Recovered in wsKlineHandler:", r)
+				db.AddMessage("Recovered in wsKlineHandler", r)
 			}
 		}()
 
@@ -49,14 +51,25 @@ func Listen_Binance_Klines() {
 
 	}
 	errHandler := func(err error) {
-		log.Println(err)
+		db.AddError(err, "Listen_Binance_Klines")
+		//log.Println(err)
 	}
 	log.Println("Listen_Binance_Klines started")
-	doneC, _, err := binance.WsCombinedKlineServe(listening_symbols_map, wsKlineHandler, errHandler)
-	if err != nil {
-		fmt.Println(err)
-		return
+
+	n_connect := 1
+
+	for {
+		doneC, _, err := binance.WsCombinedKlineServe(listening_symbols_map, wsKlineHandler, errHandler)
+		if err != nil {
+			//fmt.Println(err)
+			db.AddError(err, "Listen_Binance_Klines")
+			return
+		}
+		<-doneC
+
+		n_connect++
+		db.AddMessage(fmt.Sprintf("Listen_Binance_Klines: Reconnecting, attempt #%d", n_connect))
 	}
-	<-doneC
-	log.Println("Listen_Binance_Klines finished")
+
+	//log.Println("Listen_Binance_Klines finished")
 }

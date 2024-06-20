@@ -2,9 +2,13 @@ package phmx
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"github.com/Krisa/go-phemex"
 	socketio "github.com/googollee/go-socket.io"
+	"github.com/parnurzeal/gorequest"
 	"github.com/sacOO7/gowebsocket"
 	"golang.org/x/net/websocket"
 	"log"
@@ -14,14 +18,7 @@ import (
 	"time"
 )
 
-var (
-	//apiKey    = "19dbd945-9120-4c81-8b5f-9bee29f12115"
-	//secretKey = "1fGvckB1eZrbvINKfA8eZ-tdtVQV_pvTPC4ECHbep0RkYTIzM2IxYy02YmQ1LTQyYzMtYWM1MS01ODYyNzRkMWRjYTA"
-	apiKey    = "a68b4aa9-9394-4416-8aa4-213634f19014"
-	secretKey = "7HaBhEyHs8UF2xNOXnE87_luLjur-n2Rf71evXt8Z5czODhmYzg4OS00ZWM1LTQzZmMtOTkzOS1iZTlmN2EyM2Q1MzM"
-)
-
-func TestWS(t *testing.T) {
+func TestGoPhemex(t *testing.T) {
 	PhemexClient := phemex.NewClient(apiKey, secretKey)
 
 	wsHandler := func(message interface{}) {
@@ -29,6 +26,7 @@ func TestWS(t *testing.T) {
 		case *phemex.WsAOP:
 			// snapshots / increments
 		case *phemex.WsPositionInfo:
+			fmt.Printf("%v\n", message.(phemex.WsPositionInfo).PositionInfo.Symbol)
 			// when a position is active
 		case *phemex.WsError:
 			// on connection
@@ -65,6 +63,51 @@ var id = 5
 func inc_id() int {
 	id++
 	return id
+}
+
+func TestGoPhemex2(t *testing.T) {
+	client := phemex.NewClient(apiKey, secretKey)
+
+	openOrders, err := client.NewListOpenOrdersService().Symbol("SOLUSD").
+		Do(context.Background())
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	for _, o := range openOrders {
+		fmt.Println(o)
+	}
+}
+
+func signString(raw string) (string, error) {
+	mac := hmac.New(sha256.New, []byte(secretKey))
+	_, err := mac.Write([]byte(raw))
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(mac.Sum(nil)), nil
+}
+
+func TestRestListOrders(t *testing.T) {
+	endpoint := "/exchange/order/v2/tradingList"
+	//endpoint := "/g-accounts/positions"
+	//endpoint := "/api-data/futures/v2/tradeAccountDetail"
+	queryString := "currency=USDT&limit=100&offset=0" //&symbol=ENAUSDT
+	bodyString := ""
+	expiry := fmt.Sprintf("%v", time.Now().Unix()+60)
+	raw := fmt.Sprintf("%s%s%s%s", endpoint, queryString, expiry, bodyString)
+	signedString, _ := signString(raw)
+
+	_, body, errs := gorequest.New().
+		Get("https://api.phemex.com"+endpoint+"?"+queryString).
+		AppendHeader("x-phemex-access-token", apiKey).
+		AppendHeader("x-phemex-request-expiry", expiry).
+		AppendHeader("x-phemex-request-signature", signedString).
+		End()
+
+	//fmt.Printf("%v\n", resp)
+	fmt.Printf("%v\n", body)
+	fmt.Printf("%v\n", errs)
 }
 
 func TestWS2(t *testing.T) {
@@ -254,4 +297,8 @@ func TestWSRaw2(t *testing.T) {
 		log.Fatal(err)
 	}
 	fmt.Printf("Received: %s.\n", msg[:n])
+}
+
+func TestListen_Account_WS(t *testing.T) {
+	listen_account_ws()
 }

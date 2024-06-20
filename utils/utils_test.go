@@ -43,3 +43,7 @@ func TestWatcher(t *testing.T) {
 	// Block main goroutine forever.
 	<-make(chan struct{})
 }
+
+func TestGuid(t *testing.T) {
+	println(Guid())
+}

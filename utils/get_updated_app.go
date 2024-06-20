@@ -25,7 +25,7 @@ func ListenForUpdatedApp(app_path string, updates_subfolder string, callback fun
 	app_fn := filepath.Base(app_path)
 	updated_app_dir := path.Join(app_dir, updates_subfolder)
 	updated_app_path := path.Join(updated_app_dir, app_fn)
-	println("updated_app_dir: ", updated_app_dir)
+	//println("updated_app_dir: ", updated_app_dir)
 
 	timeout := 1 * time.Second
 	ticker := time.NewTicker(timeout)

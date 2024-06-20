@@ -3,8 +3,16 @@ package utils
 import (
 	"bytes"
 	"compress/gzip"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"github.com/google/uuid"
+	"github.com/mitchellh/mapstructure"
 	"io"
+	"net/http"
 	"strconv"
+	"strings"
 )
 
 func First[T, U any](val T, _ U) T {
@@ -29,4 +37,61 @@ func DecodeGzip(data []byte) (string, error) {
 	}
 
 	return string(decodedMsg), nil
+}
+
+func ComputeHmac256(strMessage string, strSecret string) string {
+	key := []byte(strSecret)
+	h := hmac.New(sha256.New, key)
+	h.Write([]byte(strMessage))
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+func HTTP_Request(url string, method string, headers map[string]string, dest interface{}) (response_string string, err error) {
+	var req *http.Request
+	req, err = http.NewRequest(method, url, nil)
+	if err != nil {
+		return
+	}
+	client := &http.Client{}
+	for k, v := range headers {
+		req.Header.Add(k, v)
+	}
+
+	var res *http.Response
+	res, err = client.Do(req)
+	if err != nil {
+		return
+	}
+
+	var body []byte
+	body, err = io.ReadAll(res.Body)
+	if err != nil {
+		return
+	}
+
+	response_string = string(body)
+
+	if dest == nil {
+		return
+	}
+
+	if err = json.Unmarshal(body, &dest); err != nil {
+		return
+	}
+
+	return
+}
+
+func Struct_To_Map(input interface{}) (output map[string]interface{}, err error) {
+	config := &mapstructure.DecoderConfig{
+		Result:  &output,
+		TagName: "json",
+	}
+	decoder, _ := mapstructure.NewDecoder(config)
+	err = decoder.Decode(input)
+	return
+}
+
+func Guid() string {
+	return strings.Replace(uuid.Must(uuid.NewRandom()).String(), "-", "", -1)
 }

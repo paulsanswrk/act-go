@@ -11,6 +11,8 @@ import (
 	"log"
 	"runtime"
 	"strings"
+	"sync"
+	"time"
 )
 
 var (
@@ -33,6 +35,10 @@ func init() {
 		log.Fatalf("DB init: %v", err)
 	}
 
+}
+
+func TruncateLogs() *gorm.DB {
+	return DB.Exec("truncate table app.log restart IDENTITY")
 }
 
 func Add_Log(log *entities.Log) {
@@ -78,8 +84,13 @@ func serialize_request_and_response(args ...interface{}) (req_json string, resp_
 
 	req_json = ""
 	if req != nil {
-		bytes, _ := json.Marshal(req)
-		req_json = string(bytes)
+		switch (req).(type) {
+		case string:
+			req_json = (req).(string)
+		default:
+			bytes, _ := json.Marshal(req)
+			req_json = string(bytes)
+		}
 	}
 
 	resp_json = ""
@@ -93,6 +104,28 @@ func serialize_request_and_response(args ...interface{}) (req_json string, resp_
 		}
 	}
 	return
+}
+
+var m sync.Mutex
+
+func AddMessage(msg string, args ...interface{}) {
+
+	req_json, resp_json := serialize_request_and_response(args...)
+
+	log_rec := &entities.Log{
+		Category:   entities.LogPost,
+		Message:    msg,
+		Module:     caller(),
+		StackTrace: stacktrace(),
+		Request:    req_json,
+		Response:   resp_json,
+	}
+
+	m.Lock()
+	DB.Create(log_rec)
+	time.Sleep(100 * time.Millisecond)
+	m.Unlock()
+
 }
 
 func AddError(err error, tag string, args ...interface{}) {

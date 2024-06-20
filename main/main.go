@@ -1,11 +1,11 @@
 package main
 
 import (
-	"ACT_GO/bnce"
 	"ACT_GO/bngx"
 	"ACT_GO/db"
 	"ACT_GO/db/entities"
 	"ACT_GO/utils"
+	"ACT_GO/web"
 	cp "github.com/otiai10/copy"
 	"github.com/tillberg/autorestart"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -20,7 +20,7 @@ func redirect_log() {
 
 	if runtime.GOOS == "linux" {
 		log.SetOutput(&lumberjack.Logger{
-			Filename:   "/var/log/act_go/act_go.log",
+			Filename:   "/home/ubuntu/act/log/act_go.log",
 			MaxSize:    500, // megabytes
 			MaxBackups: 4,
 			MaxAge:     28,   //days
@@ -30,11 +30,11 @@ func redirect_log() {
 }
 
 func main() {
-	//redirect_log()
+	redirect_log()
 	go autorestart.RestartOnChange()
 
 	go utils.ListenForUpdatedApp(os.Args[0], "update", func(updated_app_path string) {
-		println("Updated app detected  ")
+		//println("Updated app detected  ")
 		err := os.Remove(os.Args[0])
 		if err != nil {
 			log.Fatal(err)
@@ -43,16 +43,18 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		println("Updated app copied")
+		//println("Updated app copied")
 	})
 
 	println("App started, BuildTime = " + utils.BuildTime)
 
 	//db.Log_Cleanup()
-	db.Add_Log(&entities.Log{Message: "App started, BuildTime = " + utils.BuildTime})
+	db.Add_Log(&entities.Log{Message: "App started, BuildTime = " + utils.BuildTime, Tag: "App Lifecycle"})
 
-	go bnce.Listen_Binance_Klines()
+	//go bnce.Listen_Binance_Klines()
 	go bngx.Listen_Account_WS()
+	//go phmx.Listen_Account_WS()
+	web.Start_Web()
 
 	select {}
 	//time.Sleep(100 * time.Hour)
