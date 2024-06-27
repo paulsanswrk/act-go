@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/mitchellh/mapstructure"
 	"io"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -94,4 +95,20 @@ func Struct_To_Map(input interface{}) (output map[string]interface{}, err error)
 
 func Guid() string {
 	return strings.Replace(uuid.Must(uuid.NewRandom()).String(), "-", "", -1)
+}
+
+func Range(from float64, to float64, step float64) (result []float64) {
+	//result := make([]float64, 0)
+	step = math.Abs(step)
+
+	cnt := math.Floor(math.Abs((to-from)/step)) + 1
+
+	if to < from {
+		step = -step
+	}
+
+	for i := range int(cnt) {
+		result = append(result, from+float64(i)*step)
+	}
+	return
 }

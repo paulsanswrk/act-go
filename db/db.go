@@ -109,13 +109,21 @@ func serialize_request_and_response(args ...interface{}) (req_json string, resp_
 var m sync.Mutex
 
 func AddMessage(msg string, args ...interface{}) {
+	AddMessageWithModule(msg, "", args...)
+}
+
+func AddMessageWithModule(msg string, module string, args ...interface{}) {
 
 	req_json, resp_json := serialize_request_and_response(args...)
+
+	if module == "" {
+		module = caller()
+	}
 
 	log_rec := &entities.Log{
 		Category:   entities.LogPost,
 		Message:    msg,
-		Module:     caller(),
+		Module:     module,
 		StackTrace: stacktrace(),
 		Request:    req_json,
 		Response:   resp_json,

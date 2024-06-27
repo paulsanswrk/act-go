@@ -1,6 +1,6 @@
 module ACT_GO
 
-go 1.21
+go 1.22
 
 require (
 	github.com/Krisa/go-phemex v0.0.0-20230105125958-e3a4376347b6

@@ -22,7 +22,7 @@ func Start_Web() {
 	})
 
 	r.GET("/start1", func(c *gin.Context) {
-		go bngx.Start_Bot1()
+		go bngx.Start_Bot1_Long()
 		c.String(http.StatusOK, "Started")
 	})
 
