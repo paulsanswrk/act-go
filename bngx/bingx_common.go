@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/thoas/go-funk"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -29,4 +30,18 @@ func build_and_sign_url(params map[string]interface{}) string {
 	url = fmt.Sprintf("%s&signature=%s", url, sign)
 
 	return url
+}
+
+func get_latest_price_of_trading_pair(pair string) (price float64, err error) {
+	url := fmt.Sprintf("https://open-api.bingx.com/openApi/swap/v1/ticker/price?symbol=%s&timestamp=%d", pair, time.Now().UnixNano()/1e6)
+	var res bingx_ticker_price_response
+	_, err = utils.HTTP_Request(url, "GET", nil, &res)
+
+	if err != nil {
+		return
+	}
+
+	price, err = strconv.ParseFloat(res.Data.Price, 64)
+
+	return
 }

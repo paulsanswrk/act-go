@@ -34,7 +34,7 @@ func (api *bingx_order_api) place_futures_order(bot i_bot, orders ...swapOrderRe
 		//var res swapOrderResponse
 		response_string, err = utils.HTTP_Request(url, "POST", map[string]string{"X-BX-APIKEY": apiKey}, &res)
 		if err == nil {
-			db.AddMessage("place_futures_order", order, response_string)
+			bot.addMessage("place_futures_order", order, response_string)
 		} else {
 			db.AddError(err, "place_futures_order", order)
 			return

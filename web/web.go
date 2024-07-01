@@ -21,9 +21,24 @@ func Start_Web() {
 		c.String(http.StatusOK, "pong")
 	})
 
-	r.GET("/start1", func(c *gin.Context) {
+	r.GET("/start-long", func(c *gin.Context) {
 		go bngx.Start_Bot1_Long()
 		c.String(http.StatusOK, "Started")
+	})
+
+	r.GET("/stop-long", func(c *gin.Context) {
+		go bngx.Stop_Bot1_Long()
+		c.String(http.StatusOK, "Stopped")
+	})
+
+	r.GET("/start-short", func(c *gin.Context) {
+		go bngx.Start_Bot1_Short()
+		c.String(http.StatusOK, "Started")
+	})
+
+	r.GET("/stop-short", func(c *gin.Context) {
+		go bngx.Stop_Bot1_Short()
+		c.String(http.StatusOK, "Stopped")
 	})
 
 	// Listen and serve on defined port

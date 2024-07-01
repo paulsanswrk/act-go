@@ -54,8 +54,11 @@ func HTTP_Request(url string, method string, headers map[string]string, dest int
 		return
 	}
 	client := &http.Client{}
-	for k, v := range headers {
-		req.Header.Add(k, v)
+
+	if headers != nil {
+		for k, v := range headers {
+			req.Header.Add(k, v)
+		}
 	}
 
 	var res *http.Response

@@ -128,7 +128,11 @@ func listen_account_ws() {
 					//nothing to do
 				} else if json.Valid([]byte(decodedMsg)) {
 					var aop_response bingx_aop_response
-					json.Unmarshal([]byte(decodedMsg), &aop_response)
+					err := json.Unmarshal([]byte(decodedMsg), &aop_response)
+					if err != nil {
+						db.AddError(err, "BingX WebSocket unmarshal error", decodedMsg, aop_response)
+						continue
+					}
 
 					switch aop_response.EventType {
 					case "listenKeyExpired":
@@ -141,9 +145,9 @@ func listen_account_ws() {
 						}
 						db.AddMessage("BingX ORDER_TRADE_UPDATE", nil, decodedMsg)
 					case "ACCOUNT_UPDATE":
-						pub_account_update.RunAll(aop_response)
+						run_count := pub_account_update.RunAll(aop_response)
 						//if aop_response.Account.EventLaunchReason == "ORDER" {}
-						db.AddMessage("BingX ACCOUNT_UPDATE", nil, decodedMsg)
+						db.AddMessage(fmt.Sprintf("BingX ACCOUNT_UPDATE: run_count: %d", run_count), decodedMsg, aop_response)
 					case "ACCOUNT_CONFIG_UPDATE":
 					default:
 						db.Add_Log(&entities.Log{Message: string(decodedMsg), Tag: "listen_account_ws json BinaryMessage"})

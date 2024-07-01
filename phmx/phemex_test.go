@@ -1,6 +1,7 @@
 package phmx
 
 import (
+	"ACT_GO/db"
 	"context"
 	"crypto/hmac"
 	"crypto/sha256"
@@ -300,5 +301,6 @@ func TestWSRaw2(t *testing.T) {
 }
 
 func TestListen_Account_WS(t *testing.T) {
+	db.TruncateLogs()
 	listen_account_ws()
 }

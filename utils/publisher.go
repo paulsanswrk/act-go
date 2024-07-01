@@ -31,10 +31,12 @@ func (pub *Publisher[T]) Remove(nSub uint64) {
 	delete(pub.subscribers, nSub)
 }
 
-func (pub *Publisher[T]) RunAll(msg T) {
+func (pub *Publisher[T]) RunAll(msg T) (run_count int) {
 	for _, k := range maps.Keys(pub.subscribers) {
 		go pub.subscribers[k](msg)
+		run_count++
 	}
+	return
 }
 
 func (pub *Publisher[T]) Any() bool {

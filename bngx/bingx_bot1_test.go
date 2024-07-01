@@ -26,15 +26,15 @@ func TestClosestLoi(t *testing.T) {
 
 func TestPos_size_rule(t *testing.T) {
 	fmt.Printf("%v\n", bot_long.loi)
-	for _, f := range []float64{0.5, 1, 1.5, 1.8, 1.9, 2, 2.1, 3, 4.5} {
+	for _, f := range []float64{0.5, 1, 1.5, 1.8, 1.9, 2, 2.15, 2.2, 2.25, 2.3, 2.35, 3, 4.5} {
 		fmt.Printf("Long: %f -> %s\n", f, bot_long.pos_size_rule(decimal.NewFromFloat(f)).String())
 		//fmt.Printf("Short: %f -> %s\n", f, bot_short.pos_size_rule(decimal.NewFromFloat(f)).String())
 	}
 }
 
 func TestCalc_opening_closing_loi(t *testing.T) {
-	fill_price, _ := decimal.NewFromString("3.45")
-	bot_long.Pos_size = 2
+	fill_price, _ := decimal.NewFromString("2.31")
+	bot_long.Pos_size = 98.4
 	lo, hi, lo_index, hi_index := bot_long.closest_loi(fill_price)
 	open_price, open_amt := bot_long.calc_opening_loi(lo_index)
 	close_price, close_amt := bot_long.calc_closing_loi(hi_index)
@@ -89,13 +89,14 @@ func (api *mock_bingx_order_api) place_futures_order(testing_bot i_bot, orders .
 		api.pos_size -= buy_or_sell_amt //pos_size is positive
 	}
 
+	/*response.Account.TradeInfo =
 	response.Account.TradeInfo.Symbol = order.Symbol
 	response.Account.TradeInfo.PosDirection = testing_bot.PosDirection()
-	response.Account.TradeInfo.EntryPrice = api.avg_entry
+	response.Account.TradeInfo.EntryPrice = fmt.Sprintf("%.2f", api.avg_entry)
 	response.Account.TradeInfo.Position = fmt.Sprintf("%.2f", api.pos_size)
-	response.Account.BalanceInfo.WalletBalance = api.balance
+	response.Account.BalanceInfo.WalletBalance = fmt.Sprintf("%.2f", api.balance)
 
-	testing_bot.addMessage(fmt.Sprintf("filling futures order (%s): %.2f @ %s", order.Side, buy_or_sell_amt, order.Price), order)
+	testing_bot.addMessage(fmt.Sprintf("filling futures order (%s): %.2f @ %s", order.Side, buy_or_sell_amt, order.Price), order)*/
 
 	time.Sleep(200 * time.Millisecond)
 	//db.AddMessage("pub_account_update.RunAll")
@@ -131,6 +132,20 @@ func TestDbGet(t *testing.T) {
 	//db.DB.Save(&plan)
 	//res := db.DB.First(&plan, "bot_id=?", "www") //works
 	res := db.DB.First(&plan) //works
+	//res := db.DB.Model(BotPlan{BotID: "www"}).First(&plan) //doesn't work for non-existing key!
+
+	//stmt := db.DB.Session(&gorm.Session{DryRun: true}).Where(&BotPlan{BotID: "qqq"}).First(&plan).Statement
+	//stmt.SQL.String()
+	//println(stmt.SQL.String())
+
+	println(res.RowsAffected)
+}
+
+func TestDbDelete(t *testing.T) {
+	var plan = BotPlan{BotID: "BingX1-WIF-Short"}
+	//db.DB.Save(&plan)
+	//res := db.DB.First(&plan, "bot_id=?", "www") //works
+	res := db.DB.Delete(&plan) //works
 	//res := db.DB.Model(BotPlan{BotID: "www"}).First(&plan) //doesn't work for non-existing key!
 
 	//stmt := db.DB.Session(&gorm.Session{DryRun: true}).Where(&BotPlan{BotID: "qqq"}).First(&plan).Statement

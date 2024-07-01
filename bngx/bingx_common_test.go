@@ -1,8 +1,10 @@
 package bngx
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/mitchellh/mapstructure"
+	"log"
 	"testing"
 )
 
@@ -47,4 +49,27 @@ func TestMapStructure(t *testing.T) {
 	}
 
 	fmt.Printf("%#v\n", input)
+}
+
+func TestJsonUnmarshal(t *testing.T) {
+	s := `{"e":"ACCOUNT_UPDATE","E":1719682643796,"a":{"m":"ORDER","B":[{"a":"USDT","wb":"211.61440542","cw":"199.96822542","bc":"0"}],"P":[{"s":"WIF-USDT","pa":"108.00000000","ep":"2.16070000","up":"0.06417210","mt":"cross","iw":"11.73195210","ps":"LONG"}]}}`
+	var aop_response bingx_aop_response
+
+	err := json.Unmarshal([]byte(s), &aop_response)
+	if err != nil {
+		log.Println(err)
+	}
+
+	fmt.Printf("%#v\n", aop_response)
+}
+
+func TestGetLatestPriceOfATradingPair(t *testing.T) {
+
+	price, err := get_latest_price_of_trading_pair("BTC-USDT")
+
+	if err != nil {
+		log.Println(err)
+	}
+
+	log.Printf("%+v\n", price)
 }
