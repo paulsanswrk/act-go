@@ -1,0 +1,110 @@
+package bngx
+
+import (
+	"bytes"
+	"compress/gzip"
+	"fmt"
+	"github.com/gorilla/websocket"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"testing"
+	"time"
+)
+
+const (
+	path    = "wss://open-api-swap.bingx.com/swap-market"                                                     //
+	channel = `{"id":"e745cd6d-d0f6-4a70-8d5a-043e4c741b40","reqType": "sub","dataType":"BTC-USDT@kline_1m"}` //
+)
+
+var receivedMessage string
+var conn *websocket.Conn
+
+func TestKlinesWS(t *testing.T) {
+	interrupt := make(chan struct{})
+
+	header := http.Header{}
+	header.Add("Accept-Encoding", "gzip")
+
+	conn, _, err := websocket.DefaultDialer.Dial(path, header)
+	if err != nil {
+		log.Fatal("WebSocket connection error:", err)
+	}
+	defer conn.Close()
+
+	err = conn.WriteMessage(websocket.TextMessage, []byte(channel))
+	if err != nil {
+		log.Fatal("WebSocket write error:", err)
+	}
+
+	go func() {
+		for {
+			messageType, message, err := conn.ReadMessage()
+			if err != nil {
+				log.Println("WebSocket read error:", err)
+				close(interrupt)
+				return
+			}
+
+			handleMessage(messageType, message)
+		}
+	}()
+
+	go func() {
+		ticker := time.NewTicker(5 * time.Second)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ticker.C:
+				err := conn.WriteMessage(websocket.TextMessage, []byte("Ping"))
+				if err != nil {
+					log.Println("WebSocket write error:", err)
+				}
+			case <-interrupt:
+				return
+			}
+		}
+	}()
+
+	<-interrupt
+}
+
+func handleMessage(messageType int, message []byte) {
+	if messageType == websocket.TextMessage {
+		//
+		fmt.Println(string(message))
+	} else if messageType == websocket.BinaryMessage {
+		//
+		decodedMsg, err := decodeGzip(message)
+		if err != nil {
+			log.Println("WebSocket decode error:", err)
+			return
+		}
+		fmt.Println(decodedMsg)
+		if decodedMsg == "Ping" {
+			err = conn.WriteMessage(websocket.TextMessage, []byte("Pong"))
+			if err != nil {
+				log.Println("WebSocket write error:", err)
+				return
+			}
+			fmt.Println("Pong")
+		}
+		receivedMessage = decodedMsg
+	}
+}
+
+func decodeGzip(data []byte) (string, error) {
+	reader, err := gzip.NewReader(bytes.NewReader(data))
+	if err != nil {
+		return "", err
+	}
+	defer reader.Close()
+
+	decodedMsg, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return "", err
+	}
+
+	return string(decodedMsg), nil
+}

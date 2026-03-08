@@ -1,16 +1,13 @@
 package main
 
 import (
-	"ACT_GO/bngx"
 	"ACT_GO/db"
 	"ACT_GO/db/entities"
 	"ACT_GO/utils"
 	"ACT_GO/web"
-	cp "github.com/otiai10/copy"
 	"github.com/tillberg/autorestart"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"log"
-	"os"
 	"runtime"
 )
 
@@ -33,7 +30,7 @@ func main() {
 	redirect_log()
 	go autorestart.RestartOnChange()
 
-	go utils.ListenForUpdatedApp(os.Args[0], "update", func(updated_app_path string) {
+	/*go utils.ListenForUpdatedApp(os.Args[0], "update", func(updated_app_path string) {
 		//println("Updated app detected  ")
 		err := os.Remove(os.Args[0])
 		if err != nil {
@@ -44,7 +41,7 @@ func main() {
 			log.Fatal(err)
 		}
 		//println("Updated app copied")
-	})
+	})*/
 
 	println("App started, BuildTime = " + utils.BuildTime)
 
@@ -52,7 +49,7 @@ func main() {
 	db.Add_Log(&entities.Log{Message: "App started, BuildTime = " + utils.BuildTime, Tag: "App Lifecycle"})
 
 	//go bnce.Listen_Binance_Klines()
-	go bngx.Listen_Account_WS()
+	//go bngx.Listen_Account_WS()
 	//go phmx.Listen_Account_WS()
 	web.Start_Web()
 

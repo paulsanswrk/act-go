@@ -89,11 +89,31 @@ func signString(raw string) (string, error) {
 	return hex.EncodeToString(mac.Sum(nil)), nil
 }
 
-func TestRestListOrders(t *testing.T) {
+func TestRestListContractOrders(t *testing.T) {
 	endpoint := "/exchange/order/v2/tradingList"
 	//endpoint := "/g-accounts/positions"
 	//endpoint := "/api-data/futures/v2/tradeAccountDetail"
 	queryString := "currency=USDT&limit=100&offset=0" //&symbol=ENAUSDT
+	bodyString := ""
+	expiry := fmt.Sprintf("%v", time.Now().Unix()+60)
+	raw := fmt.Sprintf("%s%s%s%s", endpoint, queryString, expiry, bodyString)
+	signedString, _ := signString(raw)
+
+	_, body, errs := gorequest.New().
+		Get("https://api.phemex.com"+endpoint+"?"+queryString).
+		AppendHeader("x-phemex-access-token", apiKey).
+		AppendHeader("x-phemex-request-expiry", expiry).
+		AppendHeader("x-phemex-request-signature", signedString).
+		End()
+
+	//fmt.Printf("%v\n", resp)
+	fmt.Printf("%v\n", body)
+	fmt.Printf("%v\n", errs)
+}
+
+func TestRestQueryWallets(t *testing.T) {
+	endpoint := "/spot/wallets"
+	queryString := "currency=" //USDT
 	bodyString := ""
 	expiry := fmt.Sprintf("%v", time.Now().Unix()+60)
 	raw := fmt.Sprintf("%s%s%s%s", endpoint, queryString, expiry, bodyString)

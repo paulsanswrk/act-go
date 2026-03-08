@@ -3,6 +3,7 @@ package db
 import (
 	"ACT_GO/db/entities"
 	"ACT_GO/utils"
+	"crypto/sha512"
 	"encoding/json"
 	"fmt"
 	"testing"
@@ -48,4 +49,23 @@ func TestInsertLog(t *testing.T) {
 	res := DB.Create(log)
 	fmt.Printf("Log: %v\n", res)
 
+}
+
+func TestAddUser(t *testing.T) {
+	user := &User{Email: "test", Pwd: fmt.Sprintf("%x", sha512.Sum512([]byte("-pwd-111"+pwd_salt)))}
+
+	res := DB.Create(user)
+	fmt.Printf("Log: %v\n", res)
+}
+
+func TestGetUser(t *testing.T) {
+	var user User
+	res := DB.Where("email = ?", "test").First(&user)
+	fmt.Printf("Log: %v\n", res)
+	fmt.Printf("Log: %v\n", user)
+}
+
+func TestGetUser2(t *testing.T) {
+	var user = GetUser("test", "-pwd-111")
+	fmt.Printf("Log: %v\n", user)
 }
